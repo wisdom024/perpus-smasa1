@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Perpustakaan - SMAN 1 Magetan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+        .input-focus:focus {
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+        }
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #7c3aed;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glass-card w-full max-w-lg p-8 md:p-10">
+        <!-- Logo & Header -->
+        <div class="text-center mb-8">
+            <img src="https://smasa-magetan.sch.id/wp-content/uploads/2023/06/LOGO-SMA-NEGERI-1-MAGETAN-258x300.png" 
+                 alt="Logo SMAN 1 Magetan" 
+                 class="w-24 mx-auto mb-4 drop-shadow-md"
+                 onerror="this.src='https://via.placeholder.com/100?text=SMASA'">
+            <h1 class="text-2xl font-bold text-gray-800">Sistem Informasi Perpustakaan</h1>
+            <p class="text-gray-500 text-sm">SMAN 1 Magetan (SMASA)</p>
+        </div>
+
+        <!-- Form -->
+        <form id="libraryForm" class="space-y-5">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Nama Lengkap</label>
+                <input type="text" name="nama" required 
+                    class="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none transition input-focus"
+                    placeholder="Masukkan nama lengkap anda...">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Kelas</label>
+                    <select name="kelas" required 
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none transition input-focus bg-white">
+                        <option value="" disabled selected>Pilih Kelas</option>
+                        <optgroup label="X">
+                            <option value="X-1">X-1</option><option value="X-2">X-2</option><option value="X-3">X-3</option>
+                        </optgroup>
+                        <optgroup label="XI">
+                            <option value="XI-1">XI-1</option><option value="XI-2">XI-2</option><option value="XI-3">XI-3</option>
+                        </optgroup>
+                        <optgroup label="XII">
+                            <option value="XII-1">XII-1</option><option value="XII-2">XII-2</option><option value="XII-3">XII-3</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">No. Absen</label>
+                    <input type="number" name="absen" required min="1" max="50"
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none transition input-focus"
+                        placeholder="00">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Aksi</label>
+                <div class="flex gap-4">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="radio" name="aksi" value="Peminjaman" checked class="w-4 h-4 text-blue-600">
+                        <span class="text-gray-700">Peminjaman</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="radio" name="aksi" value="Pengembalian" class="w-4 h-4 text-purple-600">
+                        <span class="text-gray-700">Pengembalian</span>
+                    </label>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Judul Buku</label>
+                <textarea name="buku" required rows="2"
+                    class="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none transition input-focus"
+                    placeholder="Tuliskan judul buku yang dipinjam/dikembalikan..."></textarea>
+            </div>
+
+            <button type="submit" id="submitBtn"
+                class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold py-3 rounded-lg shadow-lg hover:opacity-90 transition transform hover:scale-[1.02] active:scale-95 flex justify-center items-center gap-2">
+                <span>Kirim Data</span>
+            </button>
+        </form>
+
+        <!-- Status Message -->
+        <div id="statusBox" class="mt-6 hidden p-4 rounded-lg text-center font-medium"></div>
+
+        <div class="mt-8 text-center text-xs text-gray-400">
+            &copy; 2024 SMAN 1 Magetan Library System
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('libraryForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const statusBox = document.getElementById('statusBox');
+
+        // GANTI URL INI dengan URL Web App dari Google Apps Script anda
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyXXXXXXXXXXXXXXXXXXXX/exec";
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // UI Feedback
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<div class="loading-spinner"></div> <span>Memproses...</span>';
+            statusBox.classList.add('hidden');
+
+            const formData = new FormData(form);
+            const data = {
+                timestamp: new Date().toLocaleString('id-ID'),
+                nama: formData.get('nama'),
+                kelas: formData.get('kelas'),
+                absen: formData.get('absen'),
+                aksi: formData.get('aksi'),
+                buku: formData.get('buku')
+            };
+
+            try {
+                // Catatan: Google Apps Script memerlukan 'no-cors' atau penanganan khusus jika menggunakan fetch biasa.
+                // Untuk demo ini, kita menggunakan URLSearchParams agar kompatibel dengan doPost Apps Script sederhana.
+                const params = new URLSearchParams(data);
+                
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Penting untuk Apps Script
+                    body: params
+                });
+
+                // Tampilkan sukses (karena no-cors tidak bisa baca response, kita asumsikan sukses jika tidak catch error)
+                showStatus('Berhasil! Data telah tersimpan di sistem.', 'bg-green-100 text-green-700 border border-green-200');
+                form.reset();
+
+            } catch (error) {
+                console.error('Error!', error.message);
+                showStatus('Terjadi kesalahan. Silakan coba lagi nanti.', 'bg-red-100 text-red-700 border border-red-200');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>Kirim Data</span>';
+            }
+        });
+
+        function showStatus(msg, classes) {
+            statusBox.innerText = msg;
+            statusBox.className = `mt-6 p-4 rounded-lg text-center font-medium ${classes}`;
+            statusBox.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
